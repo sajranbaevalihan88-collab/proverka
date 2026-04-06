@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вопрос</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 50px;
+            font-size: 2.5em;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .buttons-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            margin-top: 30px;
+            position: relative;
+            height: 80px;
+        }
+
+        button {
+            padding: 18px 50px;
+            font-size: 1.3em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #yesBtn {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            color: white;
+            position: relative;
+            z-index: 10;
+        }
+
+        #yesBtn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.4);
+        }
+
+        #yesBtn:active {
+            transform: translateY(-2px) scale(0.95);
+        }
+
+        #noBtn {
+            background: linear-gradient(45deg, #eb3349, #f45c43);
+            color: white;
+            position: relative;
+            z-index: 20;
+            transition: transform 0.2s ease-out;
+        }
+
+        #noBtn.scared {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px) rotate(-5deg);
+            }
+
+            75% {
+                transform: translateX(5px) rotate(5deg);
+            }
+        }
+
+        .result {
+            margin-top: 30px;
+            font-size: 1.5em;
+            color: #333;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s;
+            font-weight: bold;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .emoji {
+            font-size: 4em;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            button {
+                padding: 15px 35px;
+                font-size: 1.1em;
+            }
+
+            .container {
+                padding: 30px;
+            }
+
+            .buttons-wrapper {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <span class="emoji">🤔</span>
+        <h1>Ты сосал?</h1>
+
+        <div class="buttons-wrapper" id="buttonsContainer">
+            <button id="yesBtn" onclick="handleYes()">Да</button>
+            <button id="noBtn" onmouseenter="prepareRun(event)" onmousemove="runAway(event)"
+                ontouchstart="handleTouch(event)">Нет</button>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const result = document.getElementById('result');
+
+        let isRunning = false;
+        let runCount = 0;
+
+        // Получаем размеры кнопки
+        function getButtonSize() {
+            const rect = noBtn.getBoundingClientRect();
+            return { width: rect.width, height: rect.height };
+        }
+
+        // Умное убегание от курсора
+        function runAway(e) {
+            if (isRunning) return;
+            isRunning = true;
+
+            // Увеличиваем счетчик побегов
+            runCount++;
+
+            // Делаем кнопку "испуганной" (тряска)
+            noBtn.classList.add('scared');
+            setTimeout(() => noBtn.classList.remove('scared'), 300);
+
+            const btnSize = getButtonSize();
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            // Позиция курсора
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // Текущая позиция кнопки
+            const btnRect = noBtn.getBoundingClientRect();
+            const btnCenterX = btnRect.left + btnRect.width / 2;
+            const btnCenterY = btnRect.top + btnRect.height / 2;
+
+            // Вектор от курсора к кнопке
+            let deltaX = btnCenterX - mouseX;
+            let deltaY = btnCenterY - mouseY;
+
+            // Нормализуем вектор
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            if (distance > 0) {
+                deltaX /= distance;
+                deltaY /= distance;
+            }
+
+            // Расстояние побега (увеличиваем с каждым разом для сложности)
+            const baseDistance = 150;
+            const escapeDistance = baseDistance + (runCount * 10);
+
+            // Добавляем случайный угол ±30 градусов для непредсказуемости
+            const randomAngle = (Math.random() - 0.5) * 60 * (Math.PI / 180);
+            const cos = Math.cos(randomAngle);
+            const sin = Math.sin(randomAngle);
+
+            // Новая позиция (убегаем от курсора + рандом)
+            let newX = btnCenterX + (deltaX * cos - deltaY * sin) * escapeDistance;
+            let newY = btnCenterY + (deltaX * sin + deltaY * cos) * escapeDistance;
+
+            // Проверяем границы экрана
+            const padding = 20;
+            const maxX = windowWidth - btnSize.width - padding;
+            const maxY = windowHeight - btnSize.height - padding;
+            const minX = padding;
+            const minY = padding;
+
+            // Если выходим за границы, отражаемся от стенки или телепортируемся
+            if (newX < minX) newX = minX + Math.abs(newX - minX) * 0.5;
+            if (newX > maxX) newX = maxX - Math.abs(newX - maxX) * 0.5;
+            if (newY < minY) newY = minY + Math.abs(newY - minY) * 0.5;
+            if (newY > maxY) newY = maxY - Math.abs(newY - maxY) * 0.5;
+
+            // Финальная проверка границ
+            newX = Math.max(minX, Math.min(maxX, newX));
+            newY = Math.max(minY, Math.min(maxY, newY));
+
+            // Применяем позицию (fixed для свободного перемещения по экрану)
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = newX + 'px';
+            noBtn.style.top = newY + 'px';
+            noBtn.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 20 - 10}deg)`;
+            noBtn.style.zIndex = '1000';
+
+            // Разрешаем следующий побег через 200мс (анти-спам)
+            setTimeout(() => {
+                isRunning = false;
+            }, 200);
+        }
+
+        // Подготовка к побегу (при входе мыши в кнопку)
+        function prepareRun(e) {
+            if (!isRunning) {
+                runAway(e);
+            }
+        }
+
+        // Обработка нажатия "Да"
+        function handleYes() {
+            result.innerHTML = 'Я так и знал! 😏<br><small>Честность превыше всего!</small>';
+            result.classList.add('show');
+
+            // Скрываем кнопки с анимацией
+            yesBtn.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                yesBtn.style.transform = 'scale(0)';
+                noBtn.style.transform = 'scale(0)';
+                setTimeout(() => {
+                    yesBtn.style.display = 'none';
+                    noBtn.style.display = 'none';
+                }, 300);
+            }, 500);
+
+            // Эффект победы
+            createConfetti();
+        }
+
+        // Обработка тач-событий для мобильных
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const fakeEvent = {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            };
+            runAway(fakeEvent);
+        }
+
+        // Отслеживание пальца на мобильных (убегание при приближении)
+        document.addEventListener('touchmove', function (e) {
+            const touch = e.touches[0];
+            const btnRect = noBtn.getBoundingClientRect();
+            const btnCenterX = btnRect.left + btnRect.width / 2;
+            const btnCenterY = btnRect.top + btnRect.height / 2;
+
+            // Расстояние от пальца до кнопки
+            const dist = Math.sqrt(
+                Math.pow(touch.clientX - btnCenterX, 2) +
+                Math.pow(touch.clientY - btnCenterY, 2)
+            );
+
+            // Если палец ближе 100px - убегаем
+            if (dist < 100 && !isRunning) {
+                const fakeEvent = {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                };
+                runAway(fakeEvent);
+            }
+        }, { passive: false });
+
+        // Конфетти
+        function createConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffd700'];
+
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 5 + 5 + 'px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.zIndex = '9999';
+                confetti.style.pointerEvents = 'none';
+
+                document.body.appendChild(confetti);
+
+                const duration = Math.random() * 3 + 2;
+                const horizontalMove = (Math.random() - 0.5) * 400;
+
+                confetti.animate([
+                    { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+                    { transform: `translate(${horizontalMove}px, 100vh) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                ], {
+                    duration: duration * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => confetti.remove();
+            }
+        }
+
+        // Сброс позиции при изменении размера окна
+        window.addEventListener('resize', () => {
+            if (noBtn.style.position === 'fixed') {
+                const rect = noBtn.getBoundingClientRect();
+                if (rect.left > window.innerWidth - 100) {
+                    noBtn.style.left = (window.innerWidth - 100) + 'px';
+                }
+                if (rect.top > window.innerHeight - 100) {
+                    noBtn.style.top = (window.innerHeight - 100) + 'px';
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
